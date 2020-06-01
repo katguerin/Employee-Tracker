@@ -4,7 +4,9 @@
   "description": "Module 12. SQL Challenge: Employee Tracker",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "db": "sqlite3 db/theshop.db",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
