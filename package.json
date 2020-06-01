@@ -1,0 +1,27 @@
+{
+  "name": "Employee-Tracker",
+  "version": "1.0.0",
+  "description": "Module 12. SQL Challenge: Employee Tracker",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/katguerin/Employee-Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/katguerin/Employee-Tracker/issues"
+  },
+  "homepage": "https://github.com/katguerin/Employee-Tracker#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "sqlite3": "^4.2.0"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1"
+  }
+}
