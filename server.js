@@ -99,6 +99,36 @@ app.get('/api/roles/:id', (req, res) => orm.deleteOne(req, res, 'roles'));
 // Delete single department
 app.get('/api/department/:id', (req, res) => orm.deleteOne(req, res, 'department'));
 
+var editOne = require('./editOne')
+// Edit one function - needs to be checked can i still use orm for this?
+var orm = {
+    editOne: (req, res, table) => {
+        const sql = `UPDATE ${table} SET ?? = ? 
+                     WHERE id = ?`;
+        const params = [req.body.party_id, req.params.id];
+      
+        db.run(sql, params, function(err, result) {
+          if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+          }
+          res.json({
+            message: 'successfully edited',
+            data: req.body,
+            changes: this.changes
+          });
+        });
+    }
+}
+
+// Edit single employee
+app.get('/api/employees/:id', (req, res) => orm.editOne(req, res, 'employees'));
+// Edit single role
+app.get('/api/roles/:id', (req, res) => orm.editOne(req, res, 'roles'));
+// Edit single department
+app.get('/api/department/:id', (req, res) => orm.editOne(req, res, 'department'));
+
+
 // Create an employee
 app.post('/api/employees', ({ body }, res) => {
     const errors = inputCheck(body, 'first_name', 'last_name', 'role_id', 'manager_id');
