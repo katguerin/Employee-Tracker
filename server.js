@@ -16,8 +16,9 @@ const db = new sqlite3.Database('./db/theshop.db', err => {
     console.log('Officially connected to the shop database.');
 });
 
-var fineOne = require('./findOne')
 
+var findOne = require('./findOne')
+// Get single function
 var orm = {
     findOne: (req, res, table) => {
         const sql = `SELECT * FROM ${table}
@@ -33,50 +34,70 @@ var orm = {
             data: row
           });
         });
-      }
+    }
 }
 
 // Get single employee
 app.get('/api/employees/:id', (req, res) => orm.findOne(req, res, 'employees'));
-
-app.get('/api/role/:id', (req, res) => orm.findOne(req, res, 'role'));
-
+// Get single role
+app.get('/api/roles/:id', (req, res) => orm.findOne(req, res, 'roles'));
+// Get single department
 app.get('/api/department/:id', (req, res) => orm.findOne(req, res, 'department'));
 
 
-// Get all employeess
-app.get('/api/employees', (req, res) => {
-    const sql = `SELECT * FROM employees`;
-    const params = [];
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-  
-      res.json({
-        message: 'success',
-        data: rows
-      });
-    });
-});
+var findAll = require('./findAll')
+// Get all function
+var orm = {
+    findAll: (req, res, table) => {
+        const sql = `SELECT * FROM ${table}`;
+        const params = [req.params.id];
+        db.all(sql, params, (err, rows) => {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({
+                message: 'success',
+                data: rows
+            });
+        });
+    }
+}
 
-// Delete an employee
-app.delete('/api/employees/:id', (req, res) => {
-    const sql = `DELETE FROM employees WHERE id = ?`;
-    const params = [req.params.id];
-    db.run(sql, params, function(err, result) {
-      if (err) {
-        res.status(400).json({ error: res.message });
-        return;
-      }
-  
-      res.json({
-        message: 'successfully deleted',
-        changes: this.changes
-      });
-    });
-});
+// Get all employees
+app.get('/api/employees', (req, res) => orm.findAll(req, res, 'employees'));
+// Get all roles
+app.get('/api/roles', (req, res) => orm.findAll(req, res, 'roles'));
+// Get all departments
+app.get('/api/department', (req, res) => orm.findAll(req, res, 'department'));
+
+
+var deleteOne = require('./deleteOne')
+// Delete a selection function
+var orm = {
+    deleteOne: (req, res, table) => {
+        const sql = `DELETE * FROM employees ${table} 
+                    WHERE id = ?`;
+        const params = [req.params.id];
+        db.run(sql, params, function(err, result) {
+            if (err) {
+                res.status(400).json({ error: res.message });
+                return;
+            }
+            res.json({
+                message: 'successfully deleted',
+                changes: this.changes
+            });
+        });
+    }
+}    
+
+// Delete single employee
+app.get('/api/employees/:id', (req, res) => orm.deleteOne(req, res, 'employees'));
+// Delete single role
+app.get('/api/roles/:id', (req, res) => orm.deleteOne(req, res, 'roles'));
+// Delete single department
+app.get('/api/department/:id', (req, res) => orm.deleteOne(req, res, 'department'));
 
 // Create an employee
 app.post('/api/employees', ({ body }, res) => {
@@ -92,8 +113,8 @@ db.all(`SELECT * FROM department`, (err, rows) => {
     console.log(rows);
 });
 
-// Print in terminal all from role table
-db.all(`SELECT * FROM role`, (err, rows) => {
+// Print in terminal all from roles table
+db.all(`SELECT * FROM roles`, (err, rows) => {
     console.log(rows);
 });
 
