@@ -3,6 +3,11 @@ const express = require('express');
 const PORT = process.env.PORT || 3001;
 const app = express();
 const inputCheck = require('./utils/inputCheck');
+const mysql = require('mysql2');
+const inquirer = require('inquirer');
+const consoleTable = require('console.table');
+
+var Promise = require('bluebird');
 
 // Express middleware
 app.use(express.urlencoded({ extended: false }));
@@ -15,12 +20,15 @@ const db = new sqlite3.Database('./db/theshop.db', err => {
     }
     console.log('Officially connected to the shop database.');
 });
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'local',
+    database: 'theshop',
+    password: 'root'
+})
 
-
-var findOne = require('./findOne')
 // Get single function
-var orm = {
-    findOne: (req, res, table) => {
+function findOne (req, res, table) {
         const sql = `SELECT * FROM ${table}
                      WHERE id = ?`;
         const params = [req.params.id];
@@ -34,21 +42,17 @@ var orm = {
             data: row
           });
         });
-    }
 }
 
 // Get single employee
-app.get('/api/employees/:id', (req, res) => orm.findOne(req, res, 'employees'));
+app.get('/api/employees/:id', (req, res) => findOne(req, res, 'employees'));
 // Get single role
-app.get('/api/roles/:id', (req, res) => orm.findOne(req, res, 'roles'));
+app.get('/api/roles/:id', (req, res) => findOne(req, res, 'roles'));
 // Get single department
-app.get('/api/department/:id', (req, res) => orm.findOne(req, res, 'department'));
+app.get('/api/department/:id', (req, res) => findOne(req, res, 'department'));
 
-
-var findAll = require('./findAll')
 // Get all function
-var orm = {
-    findAll: (req, res, table) => {
+function findAll (req, res, table) {
         const sql = `SELECT * FROM ${table}`;
         const params = [req.params.id];
         db.all(sql, params, (err, rows) => {
@@ -61,72 +65,68 @@ var orm = {
                 data: rows
             });
         });
-    }
 }
 
 // Get all employees
-app.get('/api/employees', (req, res) => orm.findAll(req, res, 'employees'));
+app.get('/api/employees', (req, res) => findAll(req, res, 'employees'));
 // Get all roles
-app.get('/api/roles', (req, res) => orm.findAll(req, res, 'roles'));
+app.get('/api/roles', (req, res) => findAll(req, res, 'roles'));
 // Get all departments
-app.get('/api/department', (req, res) => orm.findAll(req, res, 'department'));
+app.get('/api/department', (req, res) => findAll(req, res, 'department'));
 
 
-var deleteOne = require('./deleteOne')
-// Delete a selection function
-var orm = {
-    deleteOne: (req, res, table) => {
-        const sql = `DELETE * FROM employees ${table} 
-                    WHERE id = ?`;
-        const params = [req.params.id];
-        db.run(sql, params, function(err, result) {
-            if (err) {
-                res.status(400).json({ error: res.message });
-                return;
-            }
-            res.json({
-                message: 'successfully deleted',
-                changes: this.changes
-            });
-        });
-    }
-}    
+// // Delete a selection function
+// function deleteOne: (req, res, table) => {
+//         const sql = `DELETE * FROM employees ${table} 
+//                     WHERE id = ?`;
+//         const params = [req.params.id];
+//         db.run(sql, params, function(err, result) {
+//             if (err) {
+//                 res.status(400).json({ error: res.message });
+//                 return;
+//             }
+//             res.json({
+//                 message: 'successfully deleted',
+//                 changes: this.changes
+//             }); 
+//         });
+// }   
 
-// Delete single employee
-app.get('/api/employees/:id', (req, res) => orm.deleteOne(req, res, 'employees'));
-// Delete single role
-app.get('/api/roles/:id', (req, res) => orm.deleteOne(req, res, 'roles'));
-// Delete single department
-app.get('/api/department/:id', (req, res) => orm.deleteOne(req, res, 'department'));
+// // Delete single employee
+// app.get('/api/employees/:id', (req, res) => deleteOne(req, res, 'employees'));
+// // Delete single role
+// app.get('/api/roles/:id', (req, res) => deleteOne(req, res, 'roles'));
+// // Delete single department
+// app.get('/api/department/:id', (req, res) => deleteOne(req, res, 'department'));
 
-var editOne = require('./editOne')
-// Edit one function - needs to be checked can i still use orm for this?
-var orm = {
-    editOne: (req, res, table) => {
-        const sql = `UPDATE ${table} SET ?? = ? 
-                     WHERE id = ?`;
-        const params = [req.body.party_id, req.params.id];
+// // var editOne = require('./editOne')
+// // Edit one function - needs to be checked can i still use orm for this?
+// var orm = {
+//     editOne: (req, res, table) => {
+//         const sql = `UPDATE ${table} SET ?? = ? 
+//                      WHERE id = ?`;
+//         const params = [req.body.party_id, req.params.id];
       
-        db.run(sql, params, function(err, result) {
-          if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-          }
-          res.json({
-            message: 'successfully edited',
-            data: req.body,
-            changes: this.changes
-          });
-        });
-    }
-}
+//         db.run(sql, params, function(err, result) {
+//           if (err) {
+//             res.status(400).json({ error: err.message });
+//             return;
+//           }
+//           res.json({
+//             message: 'successfully edited',
+//             data: req.body,
+//             changes: this.changes
+//           });
+//         });
+//     }
+// }
 
-// Edit single employee
-app.get('/api/employees/:id', (req, res) => orm.editOne(req, res, 'employees'));
-// Edit single role
-app.get('/api/roles/:id', (req, res) => orm.editOne(req, res, 'roles'));
-// Edit single department
-app.get('/api/department/:id', (req, res) => orm.editOne(req, res, 'department'));
+// // Edit single employee
+// app.get('/api/employees/:id', (req, res) => orm.editOne(req, res, 'employees'));
+// // Edit single role
+// app.get('/api/roles/:id', (req, res) => orm.editOne(req, res, 'roles'));
+// // Edit single department
+// app.get('/api/department/:id', (req, res) => orm.editOne(req, res, 'department'));
 
 
 // Create an employee
@@ -138,9 +138,11 @@ app.post('/api/employees', ({ body }, res) => {
     }
 });
 
-// Print in terminal all from department table
-db.all(`SELECT * FROM department`, (err, rows) => {
-    console.log(rows);
+// Print in terminal all from department table - new
+connection.query('SELECT * FROM `department`', 
+    function(err, results, fields) {
+        console.log(results);
+        console.log(fields);
 });
 
 // Print in terminal all from roles table
