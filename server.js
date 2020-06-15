@@ -29,6 +29,10 @@ function runQuery(sql, cfield = false) {
             }
             console.table(results);
 
+            if (err) {
+                console.log(err);
+            }
+
     });
 
    
@@ -67,16 +71,19 @@ inquirer.prompt([
     if (answers.docommand == 'Add a department') {
         //runQuery('SELECT * FROM `employees`');
         console.log('ADDING A DEPARTMENT');
+        addDepartment();
     }
 
     if (answers.docommand == 'Add a role') {
         //runQuery('SELECT * FROM `employees`');
         console.log('ADDING A ROLE');
+        addRole();
     }
 
     if (answers.docommand == 'Add an employee') {
         //runQuery('SELECT * FROM `employees`');
         console.log('ADDING A EMPLOYEE');
+        addEmployee();
     }
 
 
@@ -84,12 +91,86 @@ inquirer.prompt([
 
     setTimeout(function() {
         return process.exit(0);
-    }, 5000);
+    }, 10000);
 
 });
 
 
+function addDepartment() {
 
+    inquirer.prompt([
+        {
+            type : 'input',
+            message : 'Enter a department name?',
+            name : 'departmentDO',
+        }
+        ]).then( answers => {
+
+            console.info('ANSWER: ', answers.departmentDO);
+            runQuery(`INSERT into \`department\` (id, name) VALUES (null, '${answers.departmentDO}');`);
+            console.info('Your department has been added: ', answers.departmentDO);
+        });
+
+
+
+}
+
+function addRole() {
+
+    inquirer.prompt([
+        {
+            type : 'input',
+            message : 'Enter a department name?',
+            name : 'departmentDO',
+        }
+        ]).then( answers => {
+
+            console.info('ANSWER: ', answers.departmentDO);
+            runQuery(`INSERT into \`role\` (id, name) VALUES (null, '${answers.departmentDO}');`);
+            console.info('Your role has been added: ', answers.departmentDO);
+        });
+
+
+}
+
+function addEmployee() {
+
+    inquirer.prompt([
+        {
+            type : 'input',
+            message : 'Enter a first name?',
+            name : 'firstName',
+        },
+        {
+            type : 'input',
+            message : 'Enter a last name?',
+            name : 'lastName',
+        },
+        {
+            type : 'input',
+            message : 'Enter a role ID?',
+            name : 'roleID',
+        },
+        {
+            type : 'input',
+            message : 'Enter a Manager ID?',
+            name : 'managerID',
+        }
+        ]).then( answers => {
+
+            console.info('ANSWER: ', answers.firstName);
+            console.info('ANSWER: ', answers.lastName);
+            console.info('ANSWER: ', answers.roleID);
+            console.info('ANSWER: ', answers.managerID);
+
+            
+        });
+
+
+
+
+
+}
 // setTimeout((function() {
 //     return process.exit(0);
 // }), 5000);
