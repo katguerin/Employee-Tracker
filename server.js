@@ -22,15 +22,15 @@ const db = new sqlite3.Database('./db/theshop.db', err => {
 });
 const connection = mysql.createConnection({
     host: 'localhost',
-    user: 'local',
+    user: 'root',
     database: 'theshop',
     password: 'root'
-})
+});
 
 // Get single function
 function findOne (req, res, table) {
-        const sql = `SELECT * FROM ${table}
-                     WHERE id = ?`;
+        console.log(`FINDONE -- ${table}`)
+        const sql = `SELECT * FROM ${table} WHERE id = ?`;
         const params = [req.params.id];
         db.get(sql, params, (err, row) => {
           if (err) {
@@ -45,14 +45,15 @@ function findOne (req, res, table) {
 }
 
 // Get single employee
-app.get('/api/employees/:id', (req, res) => findOne(req, res, 'employees'));
+//app.get('/api/employees/:id', (req, res) => findOne(req, res, 'employees'));
 // Get single role
-app.get('/api/roles/:id', (req, res) => findOne(req, res, 'roles'));
+//app.get('/api/roles/:id', (req, res) => findOne(req, res, 'roles'));
 // Get single department
-app.get('/api/department/:id', (req, res) => findOne(req, res, 'department'));
+//app.get('/api/department/:id', (req, res) => findOne(req, res, 'department'));
 
 // Get all function
-function findAll (req, res, table) {
+function findAll(req, res, table) {
+        console.log(`FINDALL - ${table}`)
         const sql = `SELECT * FROM ${table}`;
         const params = [req.params.id];
         db.all(sql, params, (err, rows) => {
@@ -68,11 +69,11 @@ function findAll (req, res, table) {
 }
 
 // Get all employees
-app.get('/api/employees', (req, res) => findAll(req, res, 'employees'));
+//app.get('/api/employees', (req, res) => findAll(req, res, 'employees'));
 // Get all roles
-app.get('/api/roles', (req, res) => findAll(req, res, 'roles'));
+//app.get('/api/roles', (req, res) => findAll(req, res, 'roles'));
 // Get all departments
-app.get('/api/department', (req, res) => findAll(req, res, 'department'));
+//app.get('/api/department', (req, res) => findAll(req, res, 'department'));
 
 
 // // Delete a selection function
@@ -141,17 +142,20 @@ app.post('/api/employees', ({ body }, res) => {
 // Print in terminal all from department table - new
 connection.query('SELECT * FROM `department`', 
     function(err, results, fields) {
+        console.log('MYSQL - GET ALL DEPARTMENTS'); 
         console.log(results);
         console.log(fields);
 });
 
 // Print in terminal all from roles table
 db.all(`SELECT * FROM roles`, (err, rows) => {
+    console.log('GET ALL ROLES');
     console.log(rows);
 });
 
  // Print in terminal all from employees table
 db.all(`SELECT * FROM employees`, (err, rows) => {
+    console.log('GET ALL EMPLOYEES');
     console.log(rows);
 }); 
 
