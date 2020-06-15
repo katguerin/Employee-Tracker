@@ -1,25 +1,13 @@
-const sqlite3 = require('sqlite3').verbose();
-const express = require('express');
-const PORT = process.env.PORT || 3001;
-const app = express();
-const inputCheck = require('./utils/inputCheck');
+
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
 
-var Promise = require('bluebird');
 
 // Express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+//app.use(express.urlencoded({ extended: false }));
+//app.use(express.json());
 
-// Connect to database
-const db = new sqlite3.Database('./db/theshop.db', err => {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log('Officially connected to the shop database.');
-});
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -27,146 +15,102 @@ const connection = mysql.createConnection({
     password: 'root'
 });
 
-// Get single function
-function findOne (req, res, table) {
-        console.log(`FINDONE -- ${table}`)
-        const sql = `SELECT * FROM ${table} WHERE id = ?`;
-        const params = [req.params.id];
-        db.get(sql, params, (err, row) => {
-          if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-          }
-          res.json({
-            message: 'success',
-            data: row
-          });
-        });
-}
 
-// Get single employee
-//app.get('/api/employees/:id', (req, res) => findOne(req, res, 'employees'));
-// Get single role
-//app.get('/api/roles/:id', (req, res) => findOne(req, res, 'roles'));
-// Get single department
-//app.get('/api/department/:id', (req, res) => findOne(req, res, 'department'));
+function runQuery(sql, cfield = false) {
 
-// Get all function
-function findAll(req, res, table) {
-        console.log(`FINDALL - ${table}`)
-        const sql = `SELECT * FROM ${table}`;
-        const params = [req.params.id];
-        db.all(sql, params, (err, rows) => {
-            if (err) {
-                res.status(500).json({ error: err.message });
-                return;
+    // Print in terminal all from department table - new
+    connection.execute(sql, 
+        function(err, results, fields) {
+            //console.log('MYSQL - GET ALL DEPARTMENTS'); 
+            //console.log(results);
+            
+            if (cfield) {
+                console.log(fields);
             }
-            res.json({
-                message: 'success',
-                data: rows
-            });
-        });
+            console.table(results);
+
+    });
+
+   
+
 }
 
-// Get all employees
-//app.get('/api/employees', (req, res) => findAll(req, res, 'employees'));
-// Get all roles
-//app.get('/api/roles', (req, res) => findAll(req, res, 'roles'));
-// Get all departments
-//app.get('/api/department', (req, res) => findAll(req, res, 'department'));
+//runQuery('SELECT * FROM `department`');
 
+inquirer.prompt([
+{
+    type : 'rawlist',
+    message : 'What would you like to do?',
+    name : 'docommand',
+    choices : ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee']
+}
+]).then( answers => {
+    console.info('Answer:', answers.docommand);
 
-// // Delete a selection function
-// function deleteOne: (req, res, table) => {
-//         const sql = `DELETE * FROM employees ${table} 
-//                     WHERE id = ?`;
-//         const params = [req.params.id];
-//         db.run(sql, params, function(err, result) {
-//             if (err) {
-//                 res.status(400).json({ error: res.message });
-//                 return;
-//             }
-//             res.json({
-//                 message: 'successfully deleted',
-//                 changes: this.changes
-//             }); 
-//         });
-// }   
-
-// // Delete single employee
-// app.get('/api/employees/:id', (req, res) => deleteOne(req, res, 'employees'));
-// // Delete single role
-// app.get('/api/roles/:id', (req, res) => deleteOne(req, res, 'roles'));
-// // Delete single department
-// app.get('/api/department/:id', (req, res) => deleteOne(req, res, 'department'));
-
-// // var editOne = require('./editOne')
-// // Edit one function - needs to be checked can i still use orm for this?
-// var orm = {
-//     editOne: (req, res, table) => {
-//         const sql = `UPDATE ${table} SET ?? = ? 
-//                      WHERE id = ?`;
-//         const params = [req.body.party_id, req.params.id];
-      
-//         db.run(sql, params, function(err, result) {
-//           if (err) {
-//             res.status(400).json({ error: err.message });
-//             return;
-//           }
-//           res.json({
-//             message: 'successfully edited',
-//             data: req.body,
-//             changes: this.changes
-//           });
-//         });
-//     }
-// }
-
-// // Edit single employee
-// app.get('/api/employees/:id', (req, res) => orm.editOne(req, res, 'employees'));
-// // Edit single role
-// app.get('/api/roles/:id', (req, res) => orm.editOne(req, res, 'roles'));
-// // Edit single department
-// app.get('/api/department/:id', (req, res) => orm.editOne(req, res, 'department'));
-
-
-// Create an employee
-app.post('/api/employees', ({ body }, res) => {
-    const errors = inputCheck(body, 'first_name', 'last_name', 'role_id', 'manager_id');
-    if (errors) {
-      res.status(400).json({ error: errors });
-      return;
+    if (answers.docommand == 'View all departments') {
+        runQuery('SELECT * FROM `department`');
     }
+
+    if (answers.docommand == 'View all roles') {
+        runQuery(`
+        SELECT roles.title, roles.salary, department.name AS department
+        FROM roles LEFT JOIN department ON roles.department_id = department.id;`);
+    }
+
+    if (answers.docommand == 'View all employees') {
+        runQuery(`SELECT first_name, last_name, department.name AS department, roles.title AS role, roles.salary AS salary 
+        FROM employees 
+        LEFT JOIN roles ON roles.id = employees.role_id 
+        LEFT JOIN department ON department.id = roles.department_id;`);
+    }
+    
+    if (answers.docommand == 'Add a department') {
+        //runQuery('SELECT * FROM `employees`');
+        console.log('ADDING A DEPARTMENT');
+    }
+
+    if (answers.docommand == 'Add a role') {
+        //runQuery('SELECT * FROM `employees`');
+        console.log('ADDING A ROLE');
+    }
+
+    if (answers.docommand == 'Add an employee') {
+        //runQuery('SELECT * FROM `employees`');
+        console.log('ADDING A EMPLOYEE');
+    }
+
+
+
+
+    setTimeout(function() {
+        return process.exit(0);
+    }, 5000);
+
 });
 
-// Print in terminal all from department table - new
-connection.query('SELECT * FROM `department`', 
-    function(err, results, fields) {
-        console.log('MYSQL - GET ALL DEPARTMENTS'); 
-        console.log(results);
-        console.log(fields);
-});
 
-// Print in terminal all from roles table
-db.all(`SELECT * FROM roles`, (err, rows) => {
-    console.log('GET ALL ROLES');
-    console.log(rows);
-});
 
- // Print in terminal all from employees table
-db.all(`SELECT * FROM employees`, (err, rows) => {
-    console.log('GET ALL EMPLOYEES');
-    console.log(rows);
-}); 
+// setTimeout((function() {
+//     return process.exit(0);
+// }), 5000);
 
-// Default response for any other requests(Not Found) Catch all
-app.use((req, res) => {
-  res.status(404).end();
-});
+/* 
+GIVEN a command-line application that accepts user input
+WHEN I start the application
+THEN I am presented with the following options: view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
+WHEN I choose to view all departments
+THEN I am presented with a formatted table showing department names and department ids
+WHEN I choose to view all roles
+THEN I am presented with the job title, role id, the department that role belongs to, and the salary for that role
+WHEN I choose to view all employees
+THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+WHEN I choose to add a department
+THEN I am prompted to enter the name of the department and that department is added to the database
+WHEN I choose to add a role
+THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
+WHEN I choose to add an employee
+THEN I am prompted to enter the employee’s first name, last name, role, and manager and that employee is added to the database
+WHEN I choose to update an employee role
+THEN I am prompted to select an employee to update and their new role and this information is updated in the database 
+ */
 
-// Start server after DB connection
-db.on('open', () => {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-});
