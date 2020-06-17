@@ -23,30 +23,21 @@ function init() {
     FROM roles LEFT JOIN department ON roles.department_id = department.id;`, false, false);
 
 }
-
 init();
 
 
 function runQuery(sql, cfield = false, showTABLE = true) {
-    
-
     connection.execute(sql, 
         function(err, results, fields) {
             if (cfield) {
                 console.log(fields);
             }
-            
             setQueryResults(results);
-
             if (err) console.log(err);
-    
             if (showTABLE) {
                 console.table(results);
             }
-          
     });
-
-   
 }
 
 function setQueryResults(results) {
@@ -66,16 +57,12 @@ inquirer.prompt([
     console.info('Answer:', answers.docommand);
     if (answers.docommand == 'View all departments') {
         runQuery('SELECT * FROM `department`');
-
-       
     }
 
     if (answers.docommand == 'View all roles') {
         runQuery(`
         SELECT roles.id, roles.title, roles.salary, department.name AS department
         FROM roles LEFT JOIN department ON roles.department_id = department.id;`);
-
-        
     }
 
     if (answers.docommand == 'View all employees') {
@@ -83,8 +70,6 @@ inquirer.prompt([
         FROM employees 
         LEFT JOIN roles ON roles.id = employees.role_id 
         LEFT JOIN department ON department.id = roles.department_id;`);
-
-        
     }
     
     if (answers.docommand == 'Add a department') {
@@ -114,8 +99,6 @@ function addDepartment() {
             runQuery(`INSERT into \`department\` (id, name) VALUES (null, '${answers.departmentDO}');`);
             console.info('Your department has been added: ', answers.departmentDO);
             runQuery('SELECT * FROM `department`');
-
-        
         });
 }
 
@@ -139,16 +122,9 @@ function addRole() {
         ]).then( answers => {
             console.info('ANSWER: ', answers.roleName);
             runQuery(`INSERT into \`roles\` (id, title, salary, department_id) VALUES (null, '${answers.roleName}', '${answers.roleSalary}', '${answers.departmentDo}');`); 
-            
-
             console.info('Your role has been added: ', answers.roleName, ' at ', answers.roleSalary, ' in the ', answers.departmentDo, ' department');
-
-
             runQuery(`SELECT roles.title, roles.salary, department.name AS department
             FROM roles LEFT JOIN department ON roles.department_id = department.id;`);
-
-           
-
         });
 }
 
@@ -180,7 +156,6 @@ function addEmployee() {
                     roles.push({ name : item.title, value : item.id });
 
                 });
-
                 //[ {name : 'Sales Mgr', value : 1 }, { name: 'Sales' , value : 2 }];
                 return roles;
             
@@ -192,22 +167,13 @@ function addEmployee() {
             name : 'managerId',
         }
         ]).then( answers => {
-            
-            
-            
             runQuery(`INSERT INTO \`employees\` (id, first_name, last_name, role_id, manager_id) VALUES (null, '${answers.firstName}', '${answers.lastName}', ${answers.roleTitle}, ${answers.managerId});`, true, true);
-
-        
-
             console.info('Your new employee has been added: ', answers.firstName, ' ', answers.lastName, ' ', answers.roleTitle,  ' ', answers.managerId);
-            
             //final display of the added to table
             runQuery(`SELECT first_name, last_name, department.name AS department, roles.title AS role, roles.salary AS salary 
             FROM employees 
             LEFT JOIN roles ON roles.id = employees.role_id 
             LEFT JOIN department ON department.id = roles.department_id;`);
-
-           
         });
 }
 
