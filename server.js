@@ -1,12 +1,7 @@
-
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
-
-
-// Express middleware
-//app.use(express.urlencoded({ extended: false }));
-//app.use(express.json());
+let lastquery = null;
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -15,32 +10,34 @@ const connection = mysql.createConnection({
     password: 'root'
 });
 
-
-function runQuery(sql, cfield = false) {
-
-    // Print in terminal all from department table - new
+function runQuery(sql, cfield = false, returnResults = false) {
+    // print in terminal all from department table
     connection.execute(sql, 
         function(err, results, fields) {
-            //console.log('MYSQL - GET ALL DEPARTMENTS'); 
-            //console.log(results);
-            
             if (cfield) {
                 console.log(fields);
             }
-            console.table(results);
+
+            if (returnResults) {
+                // return results;
+            } else {
+                console.table(results);
+            }
+            //lastquery = results;
+            let resultsObject = [];
+            console.dir(results);
+            for(result in results) {
+               // let obj = { name : result};
+            }
+
 
             if (err) {
                 console.log(err);
             }
-
     });
-
-   
-
 }
 
-//runQuery('SELECT * FROM `department`');
-
+// opening prompt
 inquirer.prompt([
 {
     type : 'rawlist',
@@ -48,9 +45,9 @@ inquirer.prompt([
     name : 'docommand',
     choices : ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee']
 }
+
 ]).then( answers => {
     console.info('Answer:', answers.docommand);
-
     if (answers.docommand == 'View all departments') {
         runQuery('SELECT * FROM `department`');
     }
@@ -69,129 +66,101 @@ inquirer.prompt([
     }
     
     if (answers.docommand == 'Add a department') {
-        //runQuery('SELECT * FROM `employees`');
         console.log('ADDING A DEPARTMENT');
         addDepartment();
     }
 
     if (answers.docommand == 'Add a role') {
-        //runQuery('SELECT * FROM `employees`');
         console.log('ADDING A ROLE');
         addRole();
     }
 
     if (answers.docommand == 'Add an employee') {
-        //runQuery('SELECT * FROM `employees`');
         console.log('ADDING A EMPLOYEE');
         addEmployee();
     }
-
-
-
-
-    setTimeout(function() {
-        return process.exit(0);
-    }, 10000);
-
 });
 
-
 function addDepartment() {
-
     inquirer.prompt([
         {
             type : 'input',
-            message : 'Enter a department name?',
+            message : 'Enter a department name:',
             name : 'departmentDO',
         }
         ]).then( answers => {
-
-            console.info('ANSWER: ', answers.departmentDO);
             runQuery(`INSERT into \`department\` (id, name) VALUES (null, '${answers.departmentDO}');`);
             console.info('Your department has been added: ', answers.departmentDO);
+            runQuery('SELECT * FROM `department`');
         });
-
-
-
 }
 
 function addRole() {
-
     inquirer.prompt([
         {
             type : 'input',
-            message : 'Enter a department name?',
-            name : 'departmentDO',
+            message : 'Enter a role title:',
+            name : 'roleName',
+        },
+        {
+            type : 'input',
+            message : 'Enter the salary:',
+            name : 'roleSalary',
+        },
+
+        {
+            type : 'input',
+            message : 'Enter the department ID number:',
+            name : 'departmentDo',
         }
         ]).then( answers => {
-
-            console.info('ANSWER: ', answers.departmentDO);
-            runQuery(`INSERT into \`role\` (id, name) VALUES (null, '${answers.departmentDO}');`);
-            console.info('Your role has been added: ', answers.departmentDO);
+            console.info('ANSWER: ', answers.roleName);
+            runQuery(`INSERT into \`roles\` (id, title, salary, department_id) VALUES (null, '${answers.roleName}', '${answers.roleSalary}', '${answers.departmentDo}');`); 
+            // runQuery(`INSERT into \`department\` (id, name) VALUES (null, '${answers.departmentDO}');`);
+            console.info('Your role has been added: ', answers.roleName, ' at ', answers.roleSalary, ' in the ', answers.departmentDo, ' department');
+            runQuery(`SELECT roles.title, roles.salary, department.name AS department
+            FROM roles LEFT JOIN department ON roles.department_id = department.id;`);
         });
-
-
 }
 
 function addEmployee() {
 
+    runQuery(`SELECT id, title FROM roles WHERE id <> 0;`, false, true);
+
+    let roles = [ {name : 'Sales Mgr', value : '1'}, { name: 'Sales' , value : '2' }];
     inquirer.prompt([
         {
             type : 'input',
-            message : 'Enter a first name?',
+            message : 'Enter a first name: ',
             name : 'firstName',
         },
         {
             type : 'input',
-            message : 'Enter a last name?',
+            message : 'Enter a last name: ',
             name : 'lastName',
         },
         {
-            type : 'input',
-            message : 'Enter a role ID?',
-            name : 'roleID',
+            type : 'rawlist',
+            name : 'roleTitle',
+            message : 'Enter their role:',
+            choices : roles
         },
         {
             type : 'input',
-            message : 'Enter a Manager ID?',
+            message : 'Enter the manager id: ',
             name : 'managerID',
         }
         ]).then( answers => {
+            runQuery(`INSERT into \`employees\` (id, first_name, last_name, role_id, manager_id) VALUES (null, '${answers.firstName}', '${answers.lastName}');`);
+            console.info('Answer:', answers.departmentName);
 
-            console.info('ANSWER: ', answers.firstName);
-            console.info('ANSWER: ', answers.lastName);
-            console.info('ANSWER: ', answers.roleID);
-            console.info('ANSWER: ', answers.managerID);
 
-            
+            console.info('Your new employee has been added: ', answers.firstName, ' ', answers.lastName);
+            //final display of the added to table
+            runQuery(`SELECT first_name, last_name, department.name AS department, roles.title AS role, roles.salary AS salary 
+            FROM employees 
+            LEFT JOIN roles ON roles.id = employees.role_id 
+            LEFT JOIN department ON department.id = roles.department_id;`);
         });
-
-
-
-
-
 }
-// setTimeout((function() {
-//     return process.exit(0);
-// }), 5000);
-
-/* 
-GIVEN a command-line application that accepts user input
-WHEN I start the application
-THEN I am presented with the following options: view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
-WHEN I choose to view all departments
-THEN I am presented with a formatted table showing department names and department ids
-WHEN I choose to view all roles
-THEN I am presented with the job title, role id, the department that role belongs to, and the salary for that role
-WHEN I choose to view all employees
-THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
-WHEN I choose to add a department
-THEN I am prompted to enter the name of the department and that department is added to the database
-WHEN I choose to add a role
-THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
-WHEN I choose to add an employee
-THEN I am prompted to enter the employee’s first name, last name, role, and manager and that employee is added to the database
-WHEN I choose to update an employee role
-THEN I am prompted to select an employee to update and their new role and this information is updated in the database 
- */
 
